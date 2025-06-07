@@ -3,279 +3,353 @@ extends CharacterBody2D
 
 #region Export Değişkenleri
 # Inspector'dan ayarlanabilen değerler
-@export var player_id: int = 1 # Oyuncu 1 mi 2 mi olduğunu belirlemek için
-@export var move_speed: float = 400.0 # Yatay hareket hızı
-@export var sprint_speed_multiplier: float = 1.5 # Koşarken hız çarpanı
-@export var jump_speed: float = -400.0 # Zıplama gücü (eksi değer yukarı doğru hareketi temsil eder)
-@export var gravity: float = 980.0 # Yer çekimi
-@export var max_stamina: float = 100.0 # Maksimum dayanıklılık (stamina)
-@export var stamina_regen_rate: float = 10.0 # Saniyede yenilenen dayanıklılık
-@export var stamina_drain_rate: float = 20.0 # Saniyede tükenen dayanıklılık
-@export var stun_duration: float = 0.5 # Engelle çarpınca sersemleme süresi
+@export var player_id: int = 1
+@export var move_speed: float = 400.0
+@export var sprint_speed_multiplier: float = 1.5
+@export var jump_speed: float = -400.0
+@export var gravity: float = 980.0
+@export var max_stamina: float = 100.0
+@export var stamina_regen_rate: float = 10.0
+@export var stamina_drain_rate: float = 20.0
+@export var stun_duration: float = 0.5
 
-@export var stamina_message_threshold_ratio: float = 0.2 # Bu oranın altında stamina kalınca mesaj belirir (örn: 0.2 = %20)
-@export var message_scale_min: Vector2 = Vector2(0.9, 0.9) # Mesajın minimum ölçeği
-@export var message_scale_max: Vector2 = Vector2(1.1, 1.1) # Mesajın maksimum ölçeği
-@export var message_scale_duration: float = 0.8 # Mesajın büyüme/küçülme animasyonunun süresi (tek yön)
+@export var stamina_message_threshold_ratio: float = 0.2
+@export var message_scale_min: Vector2 = Vector2(0.9, 0.9)
+@export var message_scale_max: Vector2 = Vector2(1.1, 1.1)
+@export var message_scale_duration: float = 0.8
+
+# Sırta alma mekaniği için değişkenler
+@export var piggyback_speed_multiplier: float = 0.7
+@export var carrier_stamina_regen_rate: float = 5.0
+@export var piggyback_offset: Vector2 = Vector2(0, -120)
+
+# Hızlandırma mekaniği için değişkenler
+@export var boost_duration: float = 1.0     # Hızlandırmanın süresi (saniye)
+@export var boost_speed_multiplier: float = 1.5 # Hızlandırmanın hız çarpanı
 #endregion
 
 #region Hazır Nodelar
-# Sahnedeki nodelara referanslar
-@onready var sprite: Sprite2D = $PlayerSprite # Oyuncunun görseli
-@onready var player_collider: CollisionShape2D = $PlayerCollider # Oyuncunun ana çarpışma şekli
-@onready var player_area: Area2D = $PlayerArea # Köpek veya toplanabilir öğeleri algılamak için alan
-@onready var progress_bar: ProgressBar = $ProgressBar # Stamina göstermek için progress bar
-@onready var stamina_message_label: Label = $StaminaMessage # Stamina azaldığında beliren yazı
+@onready var sprite: Sprite2D = $PlayerSprite
+@onready var player_collider: CollisionShape2D = $PlayerCollider
+@onready var player_area: Area2D = $PlayerArea
+@onready var progress_bar: ProgressBar = $ProgressBar
+@onready var stamina_message_label: Label = $StaminaMessage
 #endregion
 
 #region FSM Durumları
-# Oyuncunun içinde bulunabileceği durumlar (Finite State Machine)
 enum State {
-	IDLE, # Durma durumu
-	WALK_RUN, # Yürüme/Koşma durumu
-	JUMP, # Zıplama durumu
-	STUNNED # Sersemleme durumu (engele çarpınca)
+	IDLE,
+	WALK_RUN,
+	JUMP,
+	STUNNED,
+	CARRYING,
+	CARRIED
 }
-var current_state: State = State.IDLE # Oyuncunun mevcut durumu
-var stun_timer: float = 0.0 # Sersemleme durumu için zamanlayıcı
+var current_state: State = State.IDLE
+var stun_timer: float = 0.0
 #endregion
 
 #region Oyuncu Durum Değişkenleri
-var current_stamina: float # Mevcut dayanıklılık
-var input_direction: float = 0.0 # -1: geri, 1: ileri, 0: yatay hareket yok
-var action_forward: String # İleri hareket input aksiyon adı
-var action_backward: String # Geri hareket input aksiyon adı
-var action_jump: String # Zıplama input aksiyon adı
+var current_stamina: float
+var input_direction: float = 0.0
+var action_forward: String
+var action_backward: String
+var action_jump: String
+var action_interact: String
+
+# Sırta alma durumu için referanslar
+var other_player: CharacterBody2D = null
+var carried_by: CharacterBody2D = null
+var carrying_player: CharacterBody2D = null
+var players_in_interaction_zone: Array = []
+var interaction_cooldown: float = 0.0
+var boost_timer: float = 0.0
 #endregion
 
-var message_tween: Tween # Tween nodu kod içinde oluşturulacak
+var message_tween: Tween
 
 func _ready():
-	# Başlangıç dayanıklılığını maksimuma ayarla
+	add_to_group("players")
+
+	player_area.body_entered.connect(_on_player_area_body_entered)
+	player_area.body_exited.connect(_on_player_area_body_exited)
+
 	current_stamina = max_stamina
-	
-	# Progress Bar'ın başlangıç ayarları
 	progress_bar.max_value = max_stamina
 	progress_bar.min_value = 0
 	progress_bar.value = current_stamina
-	
-	# Stamina mesajı başlangıçta gizli olsun
+
 	stamina_message_label.hide()
 	stamina_message_label.text = "Beni sırtına al!"
-	stamina_message_label.pivot_offset = stamina_message_label.size / 2.0 # Merkeze göre ölçeklensin
+	stamina_message_label.pivot_offset = stamina_message_label.size / 2.0
 
-	# Player ID'ye göre input aksiyonlarını ayarla
-	# Godot'un Proje Ayarları -> Input Map bölümünden bu aksiyonları tanımlamalısınız.
 	if player_id == 1:
 		action_forward = "player1_forward"
 		action_backward = "player1_backward"
 		action_jump = "player1_jump"
-		# Player 1'e özel sprite veya animasyon ayarları burada yapılabilir.
-		# Örneğin: sprite.texture = preload("res://player1_visual.png")
+		action_interact = "player1_interact"
 	elif player_id == 2:
 		action_forward = "player2_forward"
 		action_backward = "player2_backward"
 		action_jump = "player2_jump"
-		# Player 2'ye özel sprite veya animasyon ayarları burada yapılabilir.
-		# Örneğin: sprite.texture = preload("res://player2_visual.png")
-	
-	# Oyun başladığında oyuncuyu IDLE (durma) durumuna ayarla
+		action_interact = "player2_interact"
+
 	set_state(State.IDLE)
 
 func _physics_process(delta):
-	# Yer çekimi her zaman uygulanır (zıplarken veya düşerken)
-	velocity.y += gravity * delta
-	
-	# FSM (Sonlu Durum Makinesi) yapısına göre mevcut durumu işle
+	interaction_cooldown = max(0.0, interaction_cooldown - delta)
+	boost_timer = max(0.0, boost_timer - delta)
+
+	if other_player == null:
+		find_other_player()
+
+	if current_state != State.CARRIED:
+		velocity.y += gravity * delta
+
 	match current_state:
 		State.IDLE:
 			handle_idle_state(delta)
+			handle_interaction_check()
 		State.WALK_RUN:
 			handle_walk_run_state(delta)
+			handle_interaction_check()
 		State.JUMP:
 			handle_jump_state(delta)
 		State.STUNNED:
 			handle_stunned_state(delta)
-	
-	# Hareket ve çarpışma algılamayı uygula
-	move_and_slide()
-	
-	# Engellere çarpışmaları kontrol et (durumdan bağımsız)
+		State.CARRYING:
+			handle_carrying_state(delta)
+		State.CARRIED:
+			handle_carried_state(delta)
+
+	if current_state != State.CARRIED:
+		move_and_slide()
+
 	check_obstacle_collisions()
-	
-	# Progress Bar'ı güncel tut
 	progress_bar.value = current_stamina
-	
-	# Stamina mesajının görünürlüğünü ve animasyonunu yönet
 	update_stamina_message()
 
-# Yeni bir duruma geçişi yöneten fonksiyon
 func set_state(new_state: State):
-	# Eğer zaten aynı durumdaysak, hiçbir şey yapma
-	if current_state == new_state: 
-		return
-	
-	# Durumdan çıkış mantığı (isteğe bağlı, önceki durumu temizlemek için)
+	if current_state == new_state: return
+
 	match current_state:
 		State.STUNNED:
-			stun_timer = 0.0 # Sersemleme bitince zamanlayıcıyı sıfırla
-			# Sersemleme animasyonunu durdurma veya normal animasyona geçiş
+			stun_timer = 0.0
+		State.CARRYING:
+			carrying_player = null
+		State.CARRIED:
+			player_collider.disabled = false
+			carried_by = null
 		_:
-			pass # Diğer durumlar için özel çıkış mantığı yok
-			
-	# Mevcut durumu yeni duruma ayarla
+			pass
+
 	current_state = new_state
-	
-	# Yeni duruma giriş mantığı (isteğe bağlı, yeni durumu başlatmak için)
+
 	match current_state:
-		State.IDLE:
-			# Sprite animasyonunu IDLE (boşta) olarak ayarla
-			# print("Oyuncu %d: IDLE durumunda" % player_id)
-			pass
-		State.WALK_RUN:
-			# Sprite animasyonunu Yürüme/Koşma olarak ayarla
-			# print("Oyuncu %d: WALKING/RUNNING durumunda" % player_id)
-			pass
-		State.JUMP:
-			# Sprite animasyonunu Zıplama olarak ayarla
-			# print("Oyuncu %d: JUMP durumunda" % player_id)
-			pass
+		State.IDLE: pass
+		State.WALK_RUN: pass
+		State.JUMP: pass
 		State.STUNNED:
-			stun_timer = stun_duration # Sersemleme süresini başlat
-			velocity.x = 0 # Sersemlenince yatay hızı sıfırla
-			# Sprite animasyonunu STUNNED (sersemlemiş) olarak ayarla
-			# print("Oyuncu %d: STUNNED durumunda" % player_id)
+			stun_timer = stun_duration
+			velocity.x = 0
+		State.CARRYING:
 			pass
+		State.CARRIED:
+			velocity = Vector2.ZERO
+			player_collider.disabled = true
+			if stamina_message_label.is_visible_in_tree():
+				stamina_message_label.hide()
 
-# IDLE (durma) durumunu yöneten fonksiyon
 func handle_idle_state(delta):
-	handle_horizontal_input() # Yatay inputu kontrol et
-	handle_stamina_regen(delta) # Dayanıklılığı yenile (sadece IDLE durumunda)
-	
-	# Durum geçişleri
-	if input_direction != 0: # Yatay hareket inputu varsa
-		set_state(State.WALK_RUN)
-	elif Input.is_action_just_pressed(action_jump) and is_on_floor(): # Zıplama inputu ve yerdeyse
-		velocity.y = jump_speed # Zıplama hızını uygula
-		set_state(State.JUMP) # Zıplama durumuna geç
-	
-	velocity.x = 0 # IDLE durumunda yatay hızı sıfırla (yerde sabit kal)
+	handle_horizontal_input()
+	handle_stamina_regen(delta)
 
-# WALK_RUN (yürüme/koşma) durumunu yöneten fonksiyon
+	if input_direction != 0:
+		set_state(State.WALK_RUN)
+	elif can_process_input() and Input.is_action_just_pressed(action_jump) and is_on_floor():
+		velocity.y = jump_speed
+		set_state(State.JUMP)
+
+	velocity.x = 0
+
 func handle_walk_run_state(delta):
-	handle_horizontal_input() # Yatay inputu kontrol et
-	
-	# Stamina'ya bağlı olarak hareket hızını hesapla.
-	# Stamina azaldıkça hareket hızı azalır, ancak 'move_speed'in %20'sinden az olamaz.
+	handle_horizontal_input()
+
 	var stamina_ratio = current_stamina / max_stamina
 	var current_base_speed = lerp(move_speed * 0.2, move_speed, stamina_ratio)
-	
 	var current_speed = current_base_speed
-	
-	# İleri giderken ve dayanıklılık varken koşma/sprint yap
+
 	if input_direction == 1 and current_stamina > 0:
 		current_speed *= sprint_speed_multiplier
-	# Not: Stamina bittiğinde sprint yapma durumu 'current_base_speed' tarafından zaten kontrol ediliyor.
 
-	# Hareket varken (ileri veya geri), stamina harca
-	if input_direction != 0: # Eğer hareket ediyorsak (ileri veya geri)
+	if input_direction != 0:
 		current_stamina -= stamina_drain_rate * delta
-		current_stamina = max(0, current_stamina) # Dayanıklılık 0'ın altına düşmesin
-	
-	velocity.x = input_direction * current_speed # Yatay hızı uygula
-	
-	# Durum geçişleri
-	if input_direction == 0: # Yatay hareket inputu yoksa
-		set_state(State.IDLE) # IDLE durumuna geç
-	elif Input.is_action_just_pressed(action_jump) and is_on_floor(): # Zıplama inputu ve yerdeyse
-		velocity.y = jump_speed # Zıplama hızını uygula (jump_speed stamina'dan etkilenmiyor)
-		set_state(State.JUMP) # Zıplama durumuna geç
+		current_stamina = max(0, current_stamina)
 
-# JUMP (zıplama) durumunu yöneten fonksiyon
+	velocity.x = input_direction * current_speed
+
+	if input_direction == 0:
+		set_state(State.IDLE)
+	elif can_process_input() and Input.is_action_just_pressed(action_jump) and is_on_floor():
+		velocity.y = jump_speed
+		set_state(State.JUMP)
+
 func handle_jump_state(delta):
-	handle_horizontal_input() # Zıplarken de yatay hareket kontrolü
-	
-	# Zıplarken yatay hareket hızını uygula (bu hız stamina'dan etkilenmez, orijinal move_speed kullanılır)
+	handle_horizontal_input()
 	velocity.x = input_direction * move_speed
-	
-	# Zıplama eyleminin kendisi stamina harcasın
-	current_stamina -= stamina_drain_rate * delta # Zıplarken stamina harca
-	current_stamina = max(0, current_stamina) # Dayanıklılık 0'ın altına düşmesin
-	
-	# Durum geçişleri
-	if is_on_floor(): # Yere değerse
-		if input_direction != 0: # Hala yatay hareket inputu varsa
-			set_state(State.WALK_RUN) # Yürüme/Koşma durumuna geç
-		else:
-			set_state(State.IDLE) # Yoksa IDLE durumuna geç
+	current_stamina -= stamina_drain_rate * delta
+	current_stamina = max(0, current_stamina)
 
-# STUNNED (sersemleme) durumunu yöneten fonksiyon
+	if is_on_floor():
+		set_state(State.IDLE if input_direction == 0 else State.WALK_RUN)
+
 func handle_stunned_state(delta):
-	stun_timer -= delta # Zamanlayıcıyı azalt
-	if stun_timer <= 0: # Sersemleme süresi bittiyse
-		set_state(State.IDLE) # IDLE durumuna geri dön (veya inputa göre WALK_RUN)
-	# Sersemlemişken hareket yok, velocity.x zaten set_state içinde 0'a çekildi.
+	stun_timer -= delta
+	if stun_timer <= 0:
+		set_state(State.IDLE)
 
-# Yatay inputu işleyen ve sprite yönünü ayarlayan fonksiyon
+func handle_carrying_state(delta):
+	if not is_instance_valid(carrying_player):
+		set_state(State.IDLE)
+		return
+
+	handle_horizontal_input()
+
+	if Input.is_action_just_pressed(action_jump) and is_on_floor():
+		velocity.y = jump_speed
+
+	var final_speed = move_speed * piggyback_speed_multiplier
+	if boost_timer > 0.0:
+		final_speed *= boost_speed_multiplier
+	
+	velocity.x = input_direction * final_speed
+
+	current_stamina += carrier_stamina_regen_rate * delta
+	current_stamina = min(max_stamina, current_stamina)
+
+	carrying_player.global_position = self.global_position + piggyback_offset
+
+func handle_carried_state(delta):
+	handle_stamina_regen(delta)
+	
+	if Input.is_action_just_pressed(action_interact):
+		if is_instance_valid(carried_by):
+			carried_by.activate_speed_boost()
+
+	if current_stamina >= max_stamina:
+		dismount_with_jump()
+		return
+
+func can_process_input() -> bool:
+	if current_state == State.STUNNED or current_state == State.CARRIED:
+		return false
+	return true
+
 func handle_horizontal_input():
+	if not can_process_input():
+		input_direction = 0.0
+		return
+
 	input_direction = 0.0
 	if Input.is_action_pressed(action_forward):
 		input_direction += 1.0
-		sprite.flip_h = false # Sprite'ı sağa döndür
+		sprite.flip_h = false
 	if Input.is_action_pressed(action_backward):
 		input_direction -= 1.0
-		sprite.flip_h = true # Sprite'ı sola döndür
+		sprite.flip_h = true
 
-# Sadece stamina yenilenmesini yöneten yardımcı fonksiyon (sadece IDLE durumunda çağrılmalı)
 func handle_stamina_regen(delta):
 	current_stamina += stamina_regen_rate * delta
-	current_stamina = min(max_stamina, current_stamina) # Stamina maksimumu geçmesin
+	current_stamina = min(max_stamina, current_stamina)
 
-# Engellere çarpışmaları kontrol eden fonksiyon
 func check_obstacle_collisions():
-	# CharacterBody2D'nin çarptığı tüm kayan çarpışmaları kontrol et
 	for i in get_slide_collision_count():
 		var collision = get_slide_collision(i)
-		# Çarptığımız objenin bir TileMap olup olmadığını kontrol et
 		if collision.get_collider() and collision.get_collider() is TileMap:
-			# Eğer zaten sersemlemiş değilsek, sersemleme durumuna geç
 			if current_state != State.STUNNED:
 				set_state(State.STUNNED)
-			break # Aynı karede birden fazla çarpışma olsa bile sadece ilkini işle
+			break
 
-# Stamina mesajının görünürlüğünü ve animasyonunu yöneten fonksiyon
 func update_stamina_message():
 	var threshold_stamina = max_stamina * stamina_message_threshold_ratio
-	
-	if current_stamina <= threshold_stamina and current_state != State.STUNNED:
+	if current_stamina <= threshold_stamina and not is_piggybacking():
 		if not stamina_message_label.is_visible_in_tree():
 			stamina_message_label.show()
 			start_stamina_message_tween()
 	else:
 		if stamina_message_label.is_visible_in_tree():
 			stamina_message_label.hide()
-			# Tween'i durdur ve ölçeği sıfırla, eğer zaten oluşturulmuşsa
 			if message_tween:
 				message_tween.stop()
-				stamina_message_label.scale = Vector2(1,1) # Ölçeği sıfırla
+				stamina_message_label.scale = Vector2(1,1)
 
-# Stamina mesajı tween animasyonunu başlatan fonksiyon
 func start_stamina_message_tween():
-	# Eğer tween zaten varsa durdur, yoksa yeni bir tane oluştur
-	if message_tween:
-		message_tween.stop()
-	else:
-		message_tween = get_tree().create_tween() # Yeni Tween oluştur
-	
-	message_tween.set_loops() # Sonsuz döngüde çalışsın
-	
-	# Büyüme animasyonu
-	message_tween.tween_property(stamina_message_label, "scale", message_scale_max, message_scale_duration)\
-		.set_ease(Tween.EASE_OUT)
-	
-	# Küçülme animasyonu
-	message_tween.tween_property(stamina_message_label, "scale", message_scale_min, message_scale_duration)\
-		.set_ease(Tween.EASE_IN)
-	
-	# Tween tamamlandığında yapılacak ek işlemler (isteğe bağlı)
-	# message_tween.finished.connect(_on_message_tween_finished)
+	if message_tween: message_tween.stop()
+	else: message_tween = get_tree().create_tween()
+
+	message_tween.set_loops()
+	message_tween.tween_property(stamina_message_label, "scale", message_scale_max, message_scale_duration).set_ease(Tween.EASE_OUT)
+	message_tween.tween_property(stamina_message_label, "scale", message_scale_min, message_scale_duration).set_ease(Tween.EASE_IN)
+
+func find_other_player():
+	var players = get_tree().get_nodes_in_group("players")
+	for p in players:
+		if p != self:
+			other_player = p
+			break
+
+func handle_interaction_check():
+	if interaction_cooldown > 0.0:
+		return
+
+	if not can_process_input():
+		return
+
+	if Input.is_action_just_pressed(action_interact) and is_instance_valid(other_player):
+		if other_player.is_requesting_piggyback() and other_player in players_in_interaction_zone:
+			start_carrying(other_player)
+			other_player.start_being_carried(self)
+
+func _on_player_area_body_entered(body: Node2D):
+	if body.is_in_group("players") and body != self:
+		if not body in players_in_interaction_zone:
+			players_in_interaction_zone.append(body)
+
+func _on_player_area_body_exited(body: Node2D):
+	if body in players_in_interaction_zone:
+		players_in_interaction_zone.erase(body)
+
+func is_requesting_piggyback() -> bool:
+	return stamina_message_label.is_visible_in_tree()
+
+func start_carrying(player_to_carry: CharacterBody2D):
+	carrying_player = player_to_carry
+	set_state(State.CARRYING)
+
+func start_being_carried(carrier: CharacterBody2D):
+	carried_by = carrier
+	set_state(State.CARRIED)
+
+func stop_piggyback():
+	interaction_cooldown = 0.5
+
+	if is_instance_valid(carried_by):
+		carried_by.set_state(State.IDLE)
+	elif is_instance_valid(carrying_player):
+		carrying_player.set_state(State.IDLE)
+
+	set_state(State.IDLE)
+
+func dismount_with_jump():
+	if carried_by == null or not is_instance_valid(carried_by):
+		return
+
+	carried_by.set_state(State.IDLE)
+	velocity.y = jump_speed
+	set_state(State.JUMP)
+
+func activate_speed_boost():
+	boost_timer = boost_duration
+
+func is_piggybacking() -> bool:
+	return current_state == State.CARRYING or current_state == State.CARRIED
