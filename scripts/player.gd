@@ -12,6 +12,11 @@ extends CharacterBody2D
 @export var stamina_regen_rate: float = 10.0 # Saniyede yenilenen dayanıklılık
 @export var stamina_drain_rate: float = 20.0 # Saniyede tükenen dayanıklılık
 @export var stun_duration: float = 0.5 # Engelle çarpınca sersemleme süresi
+
+@export var stamina_message_threshold_ratio: float = 0.2 # Bu oranın altında stamina kalınca mesaj belirir (örn: 0.2 = %20)
+@export var message_scale_min: Vector2 = Vector2(0.9, 0.9) # Mesajın minimum ölçeği
+@export var message_scale_max: Vector2 = Vector2(1.1, 1.1) # Mesajın maksimum ölçeği
+@export var message_scale_duration: float = 0.8 # Mesajın büyüme/küçülme animasyonunun süresi (tek yön)
 #endregion
 
 #region Hazır Nodelar
@@ -20,6 +25,7 @@ extends CharacterBody2D
 @onready var player_collider: CollisionShape2D = $PlayerCollider # Oyuncunun ana çarpışma şekli
 @onready var player_area: Area2D = $PlayerArea # Köpek veya toplanabilir öğeleri algılamak için alan
 @onready var progress_bar: ProgressBar = $ProgressBar # Stamina göstermek için progress bar
+@onready var stamina_message_label: Label = $StaminaMessage # Stamina azaldığında beliren yazı
 #endregion
 
 #region FSM Durumları
@@ -42,6 +48,8 @@ var action_backward: String # Geri hareket input aksiyon adı
 var action_jump: String # Zıplama input aksiyon adı
 #endregion
 
+var message_tween: Tween # Tween nodu kod içinde oluşturulacak
+
 func _ready():
 	# Başlangıç dayanıklılığını maksimuma ayarla
 	current_stamina = max_stamina
@@ -51,6 +59,11 @@ func _ready():
 	progress_bar.min_value = 0
 	progress_bar.value = current_stamina
 	
+	# Stamina mesajı başlangıçta gizli olsun
+	stamina_message_label.hide()
+	stamina_message_label.text = "Beni sırtına al!"
+	stamina_message_label.pivot_offset = stamina_message_label.size / 2.0 # Merkeze göre ölçeklensin
+
 	# Player ID'ye göre input aksiyonlarını ayarla
 	# Godot'un Proje Ayarları -> Input Map bölümünden bu aksiyonları tanımlamalısınız.
 	if player_id == 1:
@@ -92,6 +105,9 @@ func _physics_process(delta):
 	
 	# Progress Bar'ı güncel tut
 	progress_bar.value = current_stamina
+	
+	# Stamina mesajının görünürlüğünü ve animasyonunu yönet
+	update_stamina_message()
 
 # Yeni bir duruma geçişi yöneten fonksiyon
 func set_state(new_state: State):
@@ -226,3 +242,40 @@ func check_obstacle_collisions():
 			if current_state != State.STUNNED:
 				set_state(State.STUNNED)
 			break # Aynı karede birden fazla çarpışma olsa bile sadece ilkini işle
+
+# Stamina mesajının görünürlüğünü ve animasyonunu yöneten fonksiyon
+func update_stamina_message():
+	var threshold_stamina = max_stamina * stamina_message_threshold_ratio
+	
+	if current_stamina <= threshold_stamina and current_state != State.STUNNED:
+		if not stamina_message_label.is_visible_in_tree():
+			stamina_message_label.show()
+			start_stamina_message_tween()
+	else:
+		if stamina_message_label.is_visible_in_tree():
+			stamina_message_label.hide()
+			# Tween'i durdur ve ölçeği sıfırla, eğer zaten oluşturulmuşsa
+			if message_tween:
+				message_tween.stop()
+				stamina_message_label.scale = Vector2(1,1) # Ölçeği sıfırla
+
+# Stamina mesajı tween animasyonunu başlatan fonksiyon
+func start_stamina_message_tween():
+	# Eğer tween zaten varsa durdur, yoksa yeni bir tane oluştur
+	if message_tween:
+		message_tween.stop()
+	else:
+		message_tween = get_tree().create_tween() # Yeni Tween oluştur
+	
+	message_tween.set_loops() # Sonsuz döngüde çalışsın
+	
+	# Büyüme animasyonu
+	message_tween.tween_property(stamina_message_label, "scale", message_scale_max, message_scale_duration)\
+		.set_ease(Tween.EASE_OUT)
+	
+	# Küçülme animasyonu
+	message_tween.tween_property(stamina_message_label, "scale", message_scale_min, message_scale_duration)\
+		.set_ease(Tween.EASE_IN)
+	
+	# Tween tamamlandığında yapılacak ek işlemler (isteğe bağlı)
+	# message_tween.finished.connect(_on_message_tween_finished)
