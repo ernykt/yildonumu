@@ -2,8 +2,8 @@
 extends CharacterBody2D
 
 @export var move_speed: float = 600.0 # Köpeğin hızı
-
 # Not: Sinyal editörden bağlandığı için _ready() fonksiyonuna gerek yoktur.
+signal obstacle_destroyed(position: Vector2)
 
 func _physics_process(delta):
 	# Sürekli olarak sağa doğru hareket et.
@@ -26,4 +26,5 @@ func _on_kopek_area_body_entered(body):
 	# Eğer nesne bir oyuncu VEYA bir engel ise...
 	if is_player or is_obstacle:
 		if is_obstacle:
+			obstacle_destroyed.emit(body.global_position)
 			body.queue_free()

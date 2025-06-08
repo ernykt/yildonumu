@@ -1,0 +1,146 @@
+[gd_scene load_steps=20 format=3 uid="uid://dle6huqk6f8lf"]
+
+[ext_resource type="Script" uid="uid://n6ms04u0l800" path="res://scripts/kopek.gd" id="1_dis4a"]
+[ext_resource type="Texture2D" uid="uid://ct64urh6ghm7i" path="res://sprites/FX052_01.png" id="3_3nou2"]
+[ext_resource type="Texture2D" uid="uid://j8mxtigu30fy" path="res://sprites/kopeg_1.png" id="3_f8a6e"]
+[ext_resource type="Texture2D" uid="uid://ckl4pwg7ikojw" path="res://sprites/FX052_02.png" id="4_e30ad"]
+[ext_resource type="Texture2D" uid="uid://bg0d1cq85w8gv" path="res://sprites/FX052_03.png" id="5_2h0gt"]
+[ext_resource type="Texture2D" uid="uid://cxfig0671rosv" path="res://sprites/FX052_04.png" id="6_5w3xe"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dis4a"]
+size = Vector2(161, 2986)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6xgso"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qitnc"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3nou2"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e30ad"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2h0gt"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5w3xe"]
+atlas = ExtResource("3_f8a6e")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_siejr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6xgso")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qitnc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3nou2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e30ad")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2h0gt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5w3xe")
+}],
+"loop": true,
+"name": &"run",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_siejr"]
+atlas = ExtResource("3_3nou2")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_18oid"]
+atlas = ExtResource("4_e30ad")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6n1cg"]
+atlas = ExtResource("5_2h0gt")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xma51"]
+atlas = ExtResource("6_5w3xe")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sar6t"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_siejr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_18oid")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6n1cg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xma51")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Kopek" type="CharacterBody2D"]
+script = ExtResource("1_dis4a")
+move_speed = 350.0
+
+[node name="KopekArea" type="Area2D" parent="."]
+collision_mask = 10
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KopekArea"]
+position = Vector2(-1.5, -1416)
+shape = SubResource("RectangleShape2D_dis4a")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(5, 5)
+sprite_frames = SubResource("SpriteFrames_siejr")
+animation = &"run"
+autoplay = "run"
+speed_scale = 1.5
+
+[node name="SmokeEffect" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(203, -57)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_sar6t")
+autoplay = "default"
+frame_progress = 0.669527
+
+[node name="SmokeEffect2" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(300, -65)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_sar6t")
+frame_progress = 0.106779
+
+[node name="SmokeEffect3" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(221, -106)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_sar6t")
+frame_progress = 0.738472
+
+[node name="SmokeEffect4" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(262, -31)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_sar6t")
+frame_progress = 0.535813
+
+[connection signal="body_entered" from="KopekArea" to="." method="_on_kopek_area_body_entered"]

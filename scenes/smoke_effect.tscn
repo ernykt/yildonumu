@@ -1,0 +1,67 @@
+[gd_scene load_steps=10 format=3 uid="uid://3ybuookr1jgq"]
+
+[ext_resource type="Texture2D" uid="uid://ct64urh6ghm7i" path="res://sprites/FX052_01.png" id="1_kuilo"]
+[ext_resource type="Texture2D" uid="uid://ckl4pwg7ikojw" path="res://sprites/FX052_02.png" id="2_81me7"]
+[ext_resource type="Texture2D" uid="uid://bg0d1cq85w8gv" path="res://sprites/FX052_03.png" id="3_2586b"]
+[ext_resource type="Texture2D" uid="uid://cxfig0671rosv" path="res://sprites/FX052_04.png" id="4_6hbrq"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_siejr"]
+atlas = ExtResource("1_kuilo")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_18oid"]
+atlas = ExtResource("2_81me7")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6n1cg"]
+atlas = ExtResource("3_2586b")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xma51"]
+atlas = ExtResource("4_6hbrq")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_kuilo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_siejr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_18oid")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6n1cg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xma51")
+}],
+"loop": false,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="SmokeEffect" type="Node2D"]
+
+[node name="SmokeEffect4" type="AnimatedSprite2D" parent="."]
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_kuilo")
+autoplay = "default"
+
+[node name="SmokeEffect3" type="AnimatedSprite2D" parent="."]
+position = Vector2(24, -45)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_kuilo")
+autoplay = "default"
+
+[node name="SmokeEffect2" type="AnimatedSprite2D" parent="."]
+position = Vector2(-56, -77)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_kuilo")
+autoplay = "default"
+
+[node name="SmokeEffect" type="AnimatedSprite2D" parent="."]
+position = Vector2(101, -84)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_kuilo")
+autoplay = "default"
