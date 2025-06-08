@@ -12,6 +12,8 @@ extends CharacterBody2D
 @export var stamina_regen_rate: float = 10.0
 @export var stamina_drain_rate: float = 20.0
 @export var stun_duration: float = 0.5
+# YENİ: Zıplamanın stamina maliyeti için değişken
+@export var jump_stamina_cost: float = 15.0
 
 @export var stamina_message_threshold_ratio: float = 0.2
 @export var message_scale_min: Vector2 = Vector2(0.9, 0.9)
@@ -21,7 +23,7 @@ extends CharacterBody2D
 # Sırta alma mekaniği için değişkenler
 @export var piggyback_speed_multiplier: float = 0.7
 @export var carrier_stamina_regen_rate: float = 5.0
-@export var piggyback_offset: Vector2 = Vector2(0, -120)
+@export var piggyback_offset: Vector2 = Vector2(0, -40)
 
 # Hızlandırma mekaniği için değişkenler
 @export var boost_duration: float = 1.0     # Hızlandırmanın süresi (saniye)
@@ -29,11 +31,14 @@ extends CharacterBody2D
 #endregion
 
 #region Hazır Nodelar
-@onready var sprite: Sprite2D = $PlayerSprite
+@onready var sprite_eren: AnimatedSprite2D = $PlayerSpriteEren
+@onready var sprite_elif: AnimatedSprite2D = $PlayerSpriteElif
 @onready var player_collider: CollisionShape2D = $PlayerCollider
 @onready var player_area: Area2D = $PlayerArea
 @onready var progress_bar: ProgressBar = $ProgressBar
 @onready var stamina_message_label: Label = $StaminaMessage
+
+var active_sprite: AnimatedSprite2D
 #endregion
 
 #region FSM Durumları
@@ -80,15 +85,19 @@ func _ready():
 	progress_bar.value = current_stamina
 
 	stamina_message_label.hide()
-	stamina_message_label.text = "Beni sırtına al!"
+	stamina_message_label.text = "Piggyback !"
 	stamina_message_label.pivot_offset = stamina_message_label.size / 2.0
 
 	if player_id == 1:
+		active_sprite = sprite_eren
+		sprite_elif.hide()
 		action_forward = "player1_forward"
 		action_backward = "player1_backward"
 		action_jump = "player1_jump"
 		action_interact = "player1_interact"
 	elif player_id == 2:
+		active_sprite = sprite_elif
+		sprite_eren.hide()
 		action_forward = "player2_forward"
 		action_backward = "player2_backward"
 		action_jump = "player2_jump"
@@ -146,15 +155,19 @@ func set_state(new_state: State):
 	current_state = new_state
 
 	match current_state:
-		State.IDLE: pass
-		State.WALK_RUN: pass
-		State.JUMP: pass
+		State.IDLE:
+			active_sprite.play("idle")
+		State.WALK_RUN:
+			active_sprite.play("run")
+		State.JUMP:
+			active_sprite.play("jump")
 		State.STUNNED:
 			stun_timer = stun_duration
 			velocity.x = 0
 		State.CARRYING:
 			pass
 		State.CARRIED:
+			active_sprite.play("carried")
 			velocity = Vector2.ZERO
 			player_collider.disabled = true
 			if stamina_message_label.is_visible_in_tree():
@@ -166,9 +179,12 @@ func handle_idle_state(delta):
 
 	if input_direction != 0:
 		set_state(State.WALK_RUN)
+	# DEĞİŞTİ: Zıplama için stamina kontrolü eklendi
 	elif can_process_input() and Input.is_action_just_pressed(action_jump) and is_on_floor():
-		velocity.y = jump_speed
-		set_state(State.JUMP)
+		if current_stamina >= jump_stamina_cost:
+			current_stamina -= jump_stamina_cost
+			velocity.y = jump_speed
+			set_state(State.JUMP)
 
 	velocity.x = 0
 
@@ -190,16 +206,17 @@ func handle_walk_run_state(delta):
 
 	if input_direction == 0:
 		set_state(State.IDLE)
+	# DEĞİŞTİ: Zıplama için stamina kontrolü eklendi
 	elif can_process_input() and Input.is_action_just_pressed(action_jump) and is_on_floor():
-		velocity.y = jump_speed
-		set_state(State.JUMP)
+		if current_stamina >= jump_stamina_cost:
+			current_stamina -= jump_stamina_cost
+			velocity.y = jump_speed
+			set_state(State.JUMP)
 
 func handle_jump_state(delta):
 	handle_horizontal_input()
 	velocity.x = input_direction * move_speed
-	current_stamina -= stamina_drain_rate * delta
-	current_stamina = max(0, current_stamina)
-
+	
 	if is_on_floor():
 		set_state(State.IDLE if input_direction == 0 else State.WALK_RUN)
 
@@ -214,6 +231,11 @@ func handle_carrying_state(delta):
 		return
 
 	handle_horizontal_input()
+
+	if input_direction != 0:
+		active_sprite.play("run")
+	else:
+		active_sprite.play("idle")
 
 	if Input.is_action_just_pressed(action_jump) and is_on_floor():
 		velocity.y = jump_speed
@@ -253,10 +275,10 @@ func handle_horizontal_input():
 	input_direction = 0.0
 	if Input.is_action_pressed(action_forward):
 		input_direction += 1.0
-		sprite.flip_h = false
+		active_sprite.flip_h = false
 	if Input.is_action_pressed(action_backward):
 		input_direction -= 1.0
-		sprite.flip_h = true
+		active_sprite.flip_h = true
 
 func handle_stamina_regen(delta):
 	current_stamina += stamina_regen_rate * delta

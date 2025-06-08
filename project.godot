@@ -15,6 +15,11 @@ run/main_scene="uid://vtlbf6so1l7s"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[display]
+
+window/size/viewport_width=1024
+window/size/viewport_height=768
+
 [input]
 
 player1_forward={
@@ -58,7 +63,15 @@ player2_interact={
 ]
 }
 
+[layer_names]
+
+2d_render/layer_1="world"
+2d_render/layer_2="players"
+2d_render/layer_3="player_areas"
+2d_render/layer_4="obstacles"
+
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

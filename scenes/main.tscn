@@ -1,29 +1,40 @@
-[gd_scene load_steps=4 format=3 uid="uid://vtlbf6so1l7s"]
+[gd_scene load_steps=6 format=3 uid="uid://vtlbf6so1l7s"]
 
 [ext_resource type="Texture2D" uid="uid://wfkqqurk8ik5" path="res://icon.svg" id="1_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://cmmrkji3xct14" path="res://scenes/camera_rig.tscn" id="2_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://5spn4s4kiym4" path="res://scenes/player.tscn" id="2_sugp2"]
+[ext_resource type="PackedScene" uid="uid://dedjpcjr2c0c2" path="res://scenes/cop_kutusu.tscn" id="4_jyhfs"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jyhfs"]
-size = Vector2(143.889, 152)
+size = Vector2(384.222, 152)
 
 [node name="Main" type="Node2D"]
 
+[node name="CameraRig" parent="." instance=ExtResource("2_jyhfs")]
+position = Vector2(576, 326)
+scale = Vector2(9, 1)
+max_zoom_level = 1.0
+zoom_margin = 1.7
+
 [node name="Icon" type="StaticBody2D" parent="."]
 position = Vector2(568, 570)
-scale = Vector2(9, 1)
+scale = Vector2(100, 1)
 
 [node name="Icon2" type="Sprite2D" parent="Icon"]
-position = Vector2(0.611114, 19.5)
-scale = Vector2(0.997396, 1.28906)
+position = Vector2(128.167, 19.5)
+scale = Vector2(2.99045, 1.28906)
 texture = ExtResource("1_0wfyh")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Icon"]
-position = Vector2(-1.61109, 17)
+position = Vector2(130.222, 17)
 shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="Player" parent="." instance=ExtResource("2_sugp2")]
-position = Vector2(568, 132)
+position = Vector2(974, 384)
 
 [node name="Player2" parent="." instance=ExtResource("2_sugp2")]
-position = Vector2(183, 194)
+position = Vector2(670, 399)
 player_id = 2
+
+[node name="CopKutusu" parent="." instance=ExtResource("4_jyhfs")]
+position = Vector2(1178, 448)

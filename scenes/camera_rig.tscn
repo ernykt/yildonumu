@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3 uid="uid://cmmrkji3xct14"]
+
+[ext_resource type="Script" uid="uid://ckylan52thxph" path="res://scripts/camera_rig.gd" id="1_txy7i"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_txy7i"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hro8h"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kelou"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tk1yl"]
+
+[node name="CameraRig" type="Node2D"]
+script = ExtResource("1_txy7i")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="InvisibleWalls" type="Node2D" parent="."]
+
+[node name="WallLeft" type="StaticBody2D" parent="InvisibleWalls"]
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InvisibleWalls/WallLeft"]
+shape = SubResource("RectangleShape2D_txy7i")
+
+[node name="WallRight" type="StaticBody2D" parent="InvisibleWalls"]
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InvisibleWalls/WallRight"]
+shape = SubResource("RectangleShape2D_hro8h")
+
+[node name="WallTop" type="StaticBody2D" parent="InvisibleWalls"]
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InvisibleWalls/WallTop"]
+shape = SubResource("RectangleShape2D_kelou")
+
+[node name="WallBottom" type="StaticBody2D" parent="InvisibleWalls"]
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InvisibleWalls/WallBottom"]
+shape = SubResource("RectangleShape2D_tk1yl")
