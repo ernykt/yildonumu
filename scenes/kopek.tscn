@@ -4,17 +4,20 @@
 [ext_resource type="Texture2D" uid="uid://wfkqqurk8ik5" path="res://icon.svg" id="1_otbv0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dis4a"]
-size = Vector2(161, 156)
+size = Vector2(161, 2986)
 
 [node name="Kopek" type="CharacterBody2D"]
 script = ExtResource("1_dis4a")
 move_speed = 350.0
 
 [node name="KopekArea" type="Area2D" parent="."]
+collision_mask = 10
 
 [node name="Icon" type="Sprite2D" parent="KopekArea"]
 texture = ExtResource("1_otbv0")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KopekArea"]
-position = Vector2(-1.5, -1)
+position = Vector2(-1.5, -1416)
 shape = SubResource("RectangleShape2D_dis4a")
+
+[connection signal="body_entered" from="KopekArea" to="." method="_on_kopek_area_body_entered"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=3 uid="uid://5spn4s4kiym4"]
+[gd_scene load_steps=58 format=3 uid="uid://5spn4s4kiym4"]
 
 [ext_resource type="Script" uid="uid://cped0pqk18mti" path="res://scripts/player.gd" id="1_3vyb7"]
 [ext_resource type="Texture2D" uid="uid://dtvo8d1cxgitt" path="res://sprites/eren_kosma.png" id="2_g2els"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://b4xu5gfi7wiag" path="res://sprites/elif_idle.png" id="3_dqkch"]
 [ext_resource type="Texture2D" uid="uid://xrcbgsbdb254" path="res://sprites/eren_ziplama.png" id="3_fjrip"]
 [ext_resource type="Texture2D" uid="uid://cgi2b5r1csmcx" path="res://sprites/elif_kosma.png" id="3_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://dvvpk604o56yu" path="res://sprites/eren_idle.png" id="3_y4r1p"]
 [ext_resource type="Texture2D" uid="uid://dwh8owncvpc7p" path="res://sprites/elif_ziplama.png" id="4_qlg0r"]
 [ext_resource type="Texture2D" uid="uid://onkale0bqgwh" path="res://sprites/elf_tasima.png" id="4_smehm"]
 [ext_resource type="FontFile" uid="uid://cnx6gh6imbjtv" path="res://fonts/Retro Gaming.ttf" id="6_tuyoq"]
@@ -14,9 +15,21 @@
 atlas = ExtResource("2_ur7pv")
 region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
-atlas = ExtResource("2_g2els")
+[sub_resource type="AtlasTexture" id="AtlasTexture_giy8y"]
+atlas = ExtResource("3_y4r1p")
 region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fdfoy"]
+atlas = ExtResource("3_y4r1p")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hhpqf"]
+atlas = ExtResource("3_y4r1p")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g5jhy"]
+atlas = ExtResource("3_y4r1p")
+region = Rect2(32, 32, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_wnwbv"]
 atlas = ExtResource("3_fjrip")
@@ -94,7 +107,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_g2els")
+"texture": SubResource("AtlasTexture_giy8y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fdfoy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hhpqf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g5jhy")
 }],
 "loop": true,
 "name": &"idle",
@@ -351,7 +373,7 @@ stamina_drain_rate = 15.0
 [node name="PlayerSpriteEren" type="AnimatedSprite2D" parent="."]
 scale = Vector2(5, 5)
 sprite_frames = SubResource("SpriteFrames_d2wvv")
-animation = &"carried"
+animation = &"idle"
 autoplay = "idle"
 speed_scale = 1.5
 

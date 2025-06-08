@@ -3,25 +3,27 @@ extends CharacterBody2D
 
 @export var move_speed: float = 600.0 # Köpeğin hızı
 
-@onready var kopek_area: Area2D = $KopekArea
-
-func _ready():
-	# KopekArea'nın body_entered sinyalini bir fonksiyona bağla
-	# Bu, alana bir fiziksel nesne girdiğinde tetiklenir.
-	kopek_area.body_entered.connect(_on_kopek_area_body_entered)
+# Not: Sinyal editörden bağlandığı için _ready() fonksiyonuna gerek yoktur.
 
 func _physics_process(delta):
-	# Sürekli olarak sağa doğru hareket et
+	# Sürekli olarak sağa doğru hareket et.
 	velocity.x = move_speed
 	move_and_slide()
 
 # KopekArea'nın algılama alanına bir nesne girdiğinde bu fonksiyon çalışır.
 func _on_kopek_area_body_entered(body):
-	# Eğer giren nesne "obstacles" grubundaysa veya katmanındaysa
-	# Onu yok et (sahneden sil).
-	# Not: Engellerin ya "obstacles" grubunda olması ya da 4. fizik katmanında
-	# olması gerekir. Katman ayarını zaten yaptık.
-	if body.get_collision_layer_value(3): # Layer 4'ün value'su 8'dir (2^3). Layer 1:1, 2:2, 3:4, 4:8
-		# Düzeltme: Godot'ta layer'lar bit flag olarak çalışır. 4. katman 2^(4-1) = 8 değerine sahiptir.
-		# get_collision_layer_value(n-1) olarak kontrol edilir.
-		body.queue_free()
+	# ÖNEMLİ: Bu fonksiyonun çalışması için KopekArea'nın Collision -> Mask
+	# ayarında "players" (Layer 2) ve "obstacles" (Layer 4) katmanlarının
+	# işaretli olması gerekir.
+
+	# Kontrol 1: Giren nesne bir oyuncu mu? (Grup kontrolü en sağlıklısıdır)
+	var is_player = body.is_in_group("players")
+
+	# Kontrol 2: Giren nesne bir engel mi? (Layer 4)
+	# Godot'ta katmanlar 0'dan başladığı için 4. katman 3. index'e denk gelir.
+	var is_obstacle = body.is_in_group("obstacle")
+
+	# Eğer nesne bir oyuncu VEYA bir engel ise...
+	if is_player or is_obstacle:
+		if is_obstacle:
+			body.queue_free()

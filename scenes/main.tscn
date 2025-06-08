@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://vtlbf6so1l7s"]
+[gd_scene load_steps=7 format=3 uid="uid://vtlbf6so1l7s"]
 
 [ext_resource type="Texture2D" uid="uid://wfkqqurk8ik5" path="res://icon.svg" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://cmmrkji3xct14" path="res://scenes/camera_rig.tscn" id="2_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://5spn4s4kiym4" path="res://scenes/player.tscn" id="2_sugp2"]
 [ext_resource type="PackedScene" uid="uid://dedjpcjr2c0c2" path="res://scenes/cop_kutusu.tscn" id="4_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://dle6huqk6f8lf" path="res://scenes/kopek.tscn" id="5_tbgi4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jyhfs"]
 size = Vector2(384.222, 152)
@@ -38,3 +39,6 @@ player_id = 2
 
 [node name="CopKutusu" parent="." instance=ExtResource("4_jyhfs")]
 position = Vector2(1178, 448)
+
+[node name="Kopek" parent="." instance=ExtResource("5_tbgi4")]
+position = Vector2(156, 424)
