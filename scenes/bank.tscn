@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dya1nykem7nun"]
+
+[ext_resource type="Texture2D" uid="uid://cw53q14r12yfm" path="res://sprites/bank.png" id="1_rjesy"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rjesy"]
+size = Vector2(29, 25)
+
+[node name="Bank" type="StaticBody2D" groups=["obstacle"]]
+scale = Vector2(5, 5)
+collision_layer = 9
+collision_mask = 2
+
+[node name="Bank" type="Sprite2D" parent="."]
+scale = Vector2(1, 1)
+texture = ExtResource("1_rjesy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, 0.5)
+shape = SubResource("RectangleShape2D_rjesy")

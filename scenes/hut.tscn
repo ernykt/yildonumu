@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://vyvwv7g6mer8"]
+
+[ext_resource type="Texture2D" uid="uid://d50tf22go7r8" path="res://sprites/hut.png" id="1_n3evu"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lbxpc"]
+size = Vector2(30, 23)
+
+[node name="Hut" type="StaticBody2D" groups=["obstacle"]]
+scale = Vector2(6, 6)
+collision_layer = 9
+collision_mask = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_n3evu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_lbxpc")

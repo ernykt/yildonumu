@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpk2ihdo3qtoh"]
+
+[ext_resource type="Texture2D" uid="uid://crufd4nvkwxbh" path="res://sprites/odun.png" id="1_7hjjn"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rax6a"]
+size = Vector2(64, 17)
+
+[node name="Odun" type="StaticBody2D" groups=["obstacle"]]
+position = Vector2(1, -1)
+scale = Vector2(3, 2)
+collision_layer = 9
+collision_mask = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_7hjjn")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -1.5)
+shape = SubResource("RectangleShape2D_rax6a")
