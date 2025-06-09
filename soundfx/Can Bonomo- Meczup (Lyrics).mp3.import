@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://d3gc281xm5hd6"
+path="res://.godot/imported/Can Bonomo- Meczup (Lyrics).mp3-f8bedd2581ca1fdad5173f9149b3a140.mp3str"
+
+[deps]
+
+source_file="res://soundfx/Can Bonomo- Meczup (Lyrics).mp3"
+dest_files=["res://.godot/imported/Can Bonomo- Meczup (Lyrics).mp3-f8bedd2581ca1fdad5173f9149b3a140.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3 uid="uid://dle6huqk6f8lf"]
+[gd_scene load_steps=44 format=3 uid="uid://dle6huqk6f8lf"]
 
 [ext_resource type="Script" uid="uid://n6ms04u0l800" path="res://scripts/kopek.gd" id="1_dis4a"]
 [ext_resource type="Texture2D" uid="uid://j8mxtigu30fy" path="res://sprites/kopeg_1.png" id="3_f8a6e"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://clyhssx4wnmn1" path="res://sprites/kopeg_3.png" id="4_3nou2"]
 [ext_resource type="Texture2D" uid="uid://bxuh62tkt17r5" path="res://sprites/kopeg_4.png" id="5_e30ad"]
 [ext_resource type="Texture2D" uid="uid://cvinsoii0hv4j" path="res://sprites/kopeg_5.png" id="6_3nou2"]
+[ext_resource type="AudioStream" uid="uid://d3gc281xm5hd6" path="res://soundfx/Can Bonomo- Meczup (Lyrics).mp3" id="7_e30ad"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dis4a"]
 size = Vector2(425, 3050)
@@ -306,5 +307,10 @@ scale = Vector2(5, 5)
 sprite_frames = SubResource("SpriteFrames_3neik")
 autoplay = "default"
 speed_scale = 1.5
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_e30ad")
+volume_db = -1.29
+max_distance = 1225.0
 
 [connection signal="body_entered" from="KopekArea" to="." method="_on_kopek_area_body_entered"]

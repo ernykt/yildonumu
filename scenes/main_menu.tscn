@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bhqr5va0us813"]
+[gd_scene load_steps=4 format=3 uid="uid://bhqr5va0us813"]
 
 [ext_resource type="Script" uid="uid://dndc4rxap7hs4" path="res://scripts/main_menu.gd" id="1_ekxnf"]
 [ext_resource type="FontFile" uid="uid://cnx6gh6imbjtv" path="res://fonts/Retro Gaming.ttf" id="1_l6cm7"]
+[ext_resource type="AudioStream" uid="uid://p0c6hdopseu" path="res://soundfx/PENIS MUSIC (1 HOUR) (PERFECTLY LOOPED).mp3" id="3_bqqt6"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -11,6 +12,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ekxnf")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = -32.0
+offset_top = -72.0
+offset_right = 1056.0
+offset_bottom = 792.0
+color = Color(1, 0.752941, 0.796078, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 0
@@ -36,6 +45,9 @@ text = "Nasıl Oynanır ?"
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_l6cm7")
 text = "Kapat"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_bqqt6")
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/Button2" to="." method="_on_button_2_pressed"]

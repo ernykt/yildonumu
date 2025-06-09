@@ -1,28 +1,90 @@
 # Quiz.gd
 extends Control
 
+@onready var audio_stream_player_2d: AudioStreamPlayer2D = $AudioStreamPlayer2D
+
 # Quiz sorularımızı ve cevaplarımızı tutan veri yapısı.
 # Yeni soruları buraya ekleyerek quiz'i kolayca genişletebilirsin.
 var quiz_data = [
 	{
-		"question": "Türkiye'nin başkenti neresidir?",
-		"options": ["İstanbul", "Ankara", "İzmir"],
-		"correct_answer_index": 1 # Ankara'nın index'i (0'dan başlar)
+		"question": "En sevdiğim gazlı içecek nedir ?",
+		"options": ["Kola", "Cola", "Pepsi"],
+		"correct_answer_index": 2 # Ankara'nın index'i (0'dan başlar)
 	},
 	{
-		"question": "Godot Engine'in ana programlama dili nedir?",
-		"options": ["C#", "GDScript", "Python"],
+		"question": "Ayak numaram nedir ?",
+		"options": ["39", "41", "43"],
 		"correct_answer_index": 1
 	},
 	{
-		"question": "Oyundaki sarı saçlı karakterin adı nedir?",
-		"options": ["Elif", "Ayşe", "Eren"],
+		"question": "Kaç sene diş teli kullandım ?",
+		"options": ["5", "4", "3"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "iki gün önce ne yedim ?",
+		"options": ["Peynirli salçalı tost", "yumurta", "çiftlik döner"],
 		"correct_answer_index": 0
 	},
 	{
-		"question": "Bu oyunun adı nedir?",
-		"options": ["Yıldönümü Macerası", "Kaçış", "Koşu"],
+		"question": "Şu an kullandığım mouse'n marka ve modeli ?",
+		"options": ["Steel series rival3", "logitech g pro x superlight", "hp office mouse"],
+		"correct_answer_index": 1
+	},
+	{
+		"question": "Whatsapp'da kayıtlı olduğun isim nedir ?",
+		"options": ["爆弾", "ぼむば", "かわいい"],
 		"correct_answer_index": 0
+	},
+	{
+		"question": "Halı saha ölçüleri hangisinde doğru verilmiştir ?",
+		"options": ["60x40", "50x30", "35x50"],
+		"correct_answer_index": 1
+	},
+	{
+		"question": "Hangi göz hastalığına sahibim ?",
+		"options": ["miyop", "astigmat", "miyop ve astigmat"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "Eren isminin hiragana yazılışı nedir ?",
+		"options": ["うれん", "えわん", "えれん"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "Odamda duran boş soda şişesinin markası ?",
+		"options": ["özkaynak", "bağlar", "beypazarı"],
+		"correct_answer_index": 0
+	},
+	{
+		"question": "Türkiyenin başkenti neresi olmalı ?",
+		"options": ["karabük", "istanbul", "giresun"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "Halkbank'da ne kadar çalıştım ?",
+		"options": ["7 ay 5 gün", "3 ay 3 gün", "3 ay 2 hafta"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "Instagramdan attıklarımı izliyor musun ?",
+		"options": ["Evet", "Hayır", "Evet görünümlü hayır"],
+		"correct_answer_index": 1
+	},
+	{
+		"question": "Odamdaki madalya hangi spora ait ?",
+		"options": ["Muay Thai", "Taekwondo", "E-spor"],
+		"correct_answer_index": 0
+	},
+	{
+		"question": "Odamdaki bitkinin adı?",
+		"options": ["Tulip", "dandelon", "kaktüs"],
+		"correct_answer_index": 2
+	},
+	{
+		"question": "Kullandığım kulaklık kime ait ?",
+		"options": ["Doki", "Kendimin", "Kuti"],
+		"correct_answer_index": 2
 	}
 ]
 
@@ -40,6 +102,7 @@ var score = 0
 var answer_buttons = [] # Butonları bir listede tutmak yönetimi kolaylaştırır
 
 func _ready():
+	audio_stream_player_2d.play()
 	# Butonları listeye ekle
 	answer_buttons = [answer_button_1, answer_button_2, answer_button_3]
 

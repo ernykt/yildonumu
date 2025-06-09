@@ -1,10 +1,12 @@
 # KameraSistemi.gd
 extends Node2D
 
-# DEĞİŞTİ: Değişken isimlerini daha anlaşılır hale getirdim.
-# Inspector'dan bu yeni isimlerle ayarlarını tekrar kontrol et.
+#region Kamera Ayarları
 @export_group("Takip ve Yumuşatma")
-@export var smoothing_speed: float = 5.0
+@export var smoothing_speed: float = 5.0 # Kamera hareketlerinin ve zoom'un yumuşaklık hızı.
+# YENİ: Kameranın dikey konumunu ayarlamak için bir ofset değişkeni.
+# Negatif değerler kamerayı yukarı kaydırır.
+@export var vertical_offset: float = -80.0
 
 @export_group("Zoom Ayarları")
 # Kameranın en fazla ne kadar UZAKLAŞABİLECEĞİ sınırı (daha küçük sayı = daha uzak).
@@ -13,6 +15,7 @@ extends Node2D
 @export var max_zoom_level: float = 1.5
 # Oyuncular ile ekran kenarı arasındaki boşluk oranı.
 @export var zoom_margin: float = 1.2
+#endregion
 
 # Takip edilecek oyuncular
 var targets: Array = []
@@ -24,26 +27,27 @@ var targets: Array = []
 @onready var wall_top: StaticBody2D = $InvisibleWalls/WallTop
 @onready var wall_bottom: StaticBody2D = $InvisibleWalls/WallBottom
 
-func _ready():
-	# Oyuncuları "players" grubundan bul ve targets dizisine ekle
-	targets = get_tree().get_nodes_in_group("players")
 
-	# YENİ: Kameranın başlangıç zoom'unu en uzak seviyeye ayarla.
-	# Bu, oyunun "yakınlaşmış" bir şekilde başlamasını engeller.
+func _ready():
+	targets = get_tree().get_nodes_in_group("players")
 	camera_2d.zoom = Vector2(min_zoom_level, min_zoom_level)
 
 func _physics_process(delta):
-	# Eğer takip edilecek oyuncu yoksa veya sadece 1 oyuncu varsa, zoom yapma
+	# Düzeltme: Oyuncuları bulana kadar aramaya devam et.
 	if targets.size() < 2:
-		# İsteğe bağlı: Tek oyuncu takibi için buraya kod eklenebilir.
-		# Şimdilik basit tutuyoruz.
+		targets = get_tree().get_nodes_in_group("players")
+		handle_single_target(delta)
 		return
 
-	# DEĞİŞTİ: Hesaplamaları daha verimli hale getirdim.
+	# Hedef pozisyonu ve zoom'u hesapla
 	var bounding_box = get_targets_bounding_box()
 	var target_position = bounding_box.get_center()
-	var target_zoom = calculate_target_zoom(bounding_box)
 	
+	# YENİ: Dikey ofseti hedef pozisyona ekle.
+	target_position.y += vertical_offset
+	
+	var target_zoom = calculate_target_zoom(bounding_box)
+
 	# Kamera pozisyonunu ve zoom'unu yumuşak bir geçişle (lerp) güncelle
 	global_position = global_position.lerp(target_position, smoothing_speed * delta)
 	camera_2d.zoom = camera_2d.zoom.lerp(Vector2(target_zoom, target_zoom), smoothing_speed * delta)
@@ -52,7 +56,23 @@ func _physics_process(delta):
 	update_invisible_walls()
 
 
-# Oyuncuların orta noktasını hesaplar
+# Sadece bir oyuncu varsa veya hiç yoksa kameranın davranışını yönetir
+func handle_single_target(delta):
+	if targets.is_empty(): return
+	
+	var target_position = targets[0].global_position
+	
+	# YENİ: Dikey ofseti tek oyuncu modunda da uygula.
+	target_position.y += vertical_offset
+
+	var target_zoom = clamp(1.0, min_zoom_level, max_zoom_level)
+	
+	global_position = global_position.lerp(target_position, smoothing_speed * delta)
+	camera_2d.zoom = camera_2d.zoom.lerp(Vector2(target_zoom, target_zoom), smoothing_speed * delta)
+	update_invisible_walls()
+
+
+# Tüm hedefleri çevreleyen bir sınırlayıcı kutu (bounding box) döndürür
 func get_targets_bounding_box() -> Rect2:
 	var bounding_box = Rect2(targets[0].global_position, Vector2.ZERO)
 	for i in range(1, targets.size()):
@@ -60,30 +80,20 @@ func get_targets_bounding_box() -> Rect2:
 	return bounding_box
 
 
-# DÜZELTİLDİ: Tüm oyuncuları ekranda tutmak için gereken zoom seviyesini hesaplar
-# Verilen sınırlayıcı kutuya göre ideal zoom seviyesini hesaplar (GÜVENLİK KONTROLÜ EKLENDİ)
+# Verilen sınırlayıcı kutuya göre ideal zoom seviyesini hesaplar
 func calculate_target_zoom(bounding_box: Rect2) -> float:
 	var viewport_size = get_viewport_rect().size
-
-	# Göstermemiz gereken alanın boyutunu (kenar boşlukları dahil) hesapla
 	var required_size = bounding_box.size * zoom_margin
-
-	# YENİ GÜVENLİK KONTROLÜ
-	# Göstermemiz gereken alan, izin verilen en yakın zoom'dan zaten daha küçükse,
-	# daha fazla hesaplama yapma ve doğrudan en yakın zoom seviyesini kullan.
-	# Bu, oyuncular yakınken oluşan "ani zoom" hatasını düzeltir.
+	
 	var view_size_at_max_zoom = viewport_size / max_zoom_level
 	if required_size.x < view_size_at_max_zoom.x and required_size.y < view_size_at_max_zoom.y:
 		return max_zoom_level
 
-	# Genişlik ve yüksekliğe göre gereken zoom oranlarını hesapla
 	var zoom_ratio_x = viewport_size.x / required_size.x
 	var zoom_ratio_y = viewport_size.y / required_size.y
 
-	# Her şeyi ekrana sığdırmak için en küçük zoom oranını (en çok uzaklaştıranı) seçmeliyiz.
 	var target_zoom = min(zoom_ratio_x, zoom_ratio_y)
 
-	# Zoom'u belirlediğimiz sınırlar içinde tut
 	return clamp(target_zoom, min_zoom_level, max_zoom_level)
 
 

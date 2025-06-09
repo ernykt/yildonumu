@@ -1,9 +1,14 @@
 # Kopek.gd
 extends CharacterBody2D
 
+@onready var audio_stream_player_2d: AudioStreamPlayer2D = $AudioStreamPlayer2D
+
 @export var move_speed: float = 600.0 # Köpeğin hızı
 # Not: Sinyal editörden bağlandığı için _ready() fonksiyonuna gerek yoktur.
 signal obstacle_destroyed(position: Vector2)
+
+func _ready() -> void:
+	audio_stream_player_2d.play()
 
 func _physics_process(delta):
 	# Sürekli olarak sağa doğru hareket et.
@@ -27,4 +32,6 @@ func _on_kopek_area_body_entered(body):
 	if is_player or is_obstacle:
 		if is_obstacle:
 			obstacle_destroyed.emit(body.global_position)
-			body.queue_free()
+			body.call_deferred("queue_free")
+		if is_player:
+			get_tree().reload_current_scene()

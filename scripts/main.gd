@@ -2,7 +2,8 @@
 extends Node2D
 
 @onready var kopek: CharacterBody2D = $Kopek
-
+@onready var count_down: Label = $CountDown
+@onready var i = 1
 # YENİ: Efektin görünümünü Inspector'dan kolayca ayarlamak için grup ve yeni değişkenler eklendi.
 @export_group("Duman Efekti Ayarları")
 # Dumanın, engelin merkezine göre nerede çıkacağı.
@@ -16,6 +17,7 @@ const SMOKE_EFFECT = preload("res://scenes/smoke_effect.tscn")
 
 # Oyun başladığında sinyali dinlemek için bağlantı kur.
 func _ready():
+	get_tree().paused = true
 	kopek.obstacle_destroyed.connect(_on_kopek_obstacle_destroyed)
 
 
@@ -47,3 +49,11 @@ func _on_kopek_obstacle_destroyed(obstacle_position: Vector2):
 	
 	# Animasyon bittiğinde, duman nesnesini sahneden silerek belleği temizle.
 	tween.finished.connect(smoke_instance.queue_free)
+
+func _on_count_down_timer_timeout() -> void:
+	if i <= 3:
+		count_down.text = str(i)
+		i += 1
+	else:
+		get_tree().paused = false
+		count_down.visible = false
